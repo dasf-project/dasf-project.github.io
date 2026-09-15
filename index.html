@@ -1,617 +1,285 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Denoising-time safety filtering for diffusion policies using discrete-time control barrier functions.">
-  <meta name="theme-color" content="#f7f8f5">
-  <title>DASF | Denoising-Time Safety Filtering</title>
-
-  <!--
-    One-page project website.
-    Expected files relative to this page:
-      main.pdf
-      figures/intro_our_method_motion_final.png
-      figures/evaluation_simulation_tasks_schematic.png
-      figures/denoise_projection_ablation_can_square.png
-      figures/evaluation_real_robot_demo_photos.png
-  -->
+  <meta name="description" content="Denoising-Time Safety Filtering for Diffusion Policies via Discrete-Time Control Barrier Functions">
+  <meta name="keywords" content="diffusion policy, control barrier function, robot manipulation, safety filter">
+  <title>DASF: Denoising-Time Safety Filtering</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Google+Sans:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #17201d;
-      --muted: #5e6b66;
-      --paper: #f7f8f5;
-      --surface: rgba(255, 255, 255, 0.82);
-      --line: rgba(23, 32, 29, 0.12);
-      --green: #176b54;
-      --green-dark: #0c4939;
-      --green-soft: #dcece5;
-      --gold: #e8b84c;
-      --red: #d9534f;
-      --shadow: 0 20px 60px rgba(23, 32, 29, 0.10);
-      --radius: 22px;
-      --max-width: 1160px;
+      --text: #363636;
+      --muted: #5f6368;
+      --link: #3273dc;
+      --dark: #363636;
+      --light: #f5f5f5;
+      --border: #dbdbdb;
+      --page-width: 960px;
+      --text-width: 768px;
     }
-
     * { box-sizing: border-box; }
-
-    html {
-      scroll-behavior: smooth;
-      scroll-padding-top: 84px;
-    }
-
+    html { scroll-behavior: smooth; background: #fff; }
     body {
       margin: 0;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 8% 5%, rgba(232, 184, 76, 0.13), transparent 28rem),
-        radial-gradient(circle at 92% 22%, rgba(23, 107, 84, 0.11), transparent 32rem),
-        var(--paper);
-      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.6;
+      color: var(--text);
+      background: #fff;
+      font-family: "Noto Sans", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
       -webkit-font-smoothing: antialiased;
     }
-
-    a { color: inherit; }
-    img { display: block; max-width: 100%; }
-
-    .wrap {
-      width: min(calc(100% - 40px), var(--max-width));
-      margin-inline: auto;
-    }
-
-    .nav-shell {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      border-bottom: 1px solid rgba(23, 32, 29, 0.08);
-      background: rgba(247, 248, 245, 0.84);
-      backdrop-filter: blur(16px);
-    }
-
-    nav {
-      min-height: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      font-size: 0.92rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-    }
-
-    .brand-mark {
-      width: 32px;
-      height: 32px;
-      display: grid;
-      place-items: center;
-      color: white;
-      border-radius: 9px;
-      background: var(--green);
-      box-shadow: 0 7px 18px rgba(23, 107, 84, 0.24);
-      letter-spacing: 0;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .nav-links a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 650;
-    }
-
-    .nav-links a:hover { color: var(--green); }
-
-    .hero {
-      min-height: calc(100vh - 70px);
-      display: grid;
-      grid-template-columns: minmax(0, 1.12fr) minmax(330px, 0.88fr);
-      align-items: center;
-      gap: clamp(44px, 7vw, 88px);
-      padding-block: clamp(72px, 9vw, 128px);
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      margin-bottom: 20px;
-      color: var(--green-dark);
-      font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 28px;
-      height: 2px;
-      background: var(--gold);
-    }
-
-    h1, h2, h3, p { margin-top: 0; }
-
-    h1 {
-      margin-bottom: 24px;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2.75rem, 6.1vw, 5.6rem);
-      line-height: 0.99;
-      letter-spacing: -0.055em;
+    img { display: block; max-width: 100%; height: auto; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { width: min(calc(100% - 40px), var(--page-width)); margin: 0 auto; }
+    .text-container { width: min(100%, var(--text-width)); margin: 0 auto; }
+    .hero { padding: 52px 0 24px; text-align: center; }
+    .publication-title {
+      max-width: 1000px;
+      margin: 0 auto 21px;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: clamp(2.25rem, 5vw, 3.35rem);
       font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: -0.028em;
+      color: #202124;
     }
-
-    h1 .accent { color: var(--green); }
-
-    .lead {
-      max-width: 720px;
-      margin-bottom: 30px;
-      color: var(--muted);
-      font-size: clamp(1.05rem, 1.7vw, 1.28rem);
+    .authors {
+      margin: 0 auto 6px;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 1.18rem;
       line-height: 1.65;
     }
-
-    .actions {
+    .authors .author-block, .affiliations .author-block { display: inline-block; margin: 0 5px; }
+    .affiliations {
+      margin: 0 auto 20px;
+      color: var(--muted);
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 0.98rem;
+    }
+    .publication-links {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      justify-content: center;
+      gap: 9px;
+      margin-top: 19px;
     }
-
     .button {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 9px;
-      min-height: 46px;
-      padding: 0 19px;
-      border: 1px solid var(--line);
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 17px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.65);
-      text-decoration: none;
-      font-size: 0.91rem;
-      font-weight: 750;
-      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      color: #fff;
+      background: var(--dark);
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: background 0.15s ease, transform 0.15s ease;
     }
-
-    .button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 9px 24px rgba(23, 32, 29, 0.10);
-    }
-
-    .button.primary {
-      color: white;
-      border-color: var(--green);
-      background: var(--green);
-    }
-
-    .hero-visual {
-      position: relative;
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: 30px;
-      background: rgba(255, 255, 255, 0.64);
-      box-shadow: var(--shadow);
-      transform: rotate(1.2deg);
-    }
-
-    .hero-visual::before {
-      content: "";
-      position: absolute;
-      inset: -12px 26px 26px -12px;
-      z-index: -1;
-      border: 1px solid rgba(23, 107, 84, 0.20);
-      border-radius: 30px;
-    }
-
-    .hero-visual img {
-      width: 100%;
-      max-height: 660px;
+    .button:hover { color: #fff; background: #222; text-decoration: none; transform: translateY(-1px); }
+    .button-icon { width: 18px; height: 18px; display: inline-grid; place-items: center; line-height: 1; }
+    .teaser { padding: 22px 0 42px; }
+    .teaser-media { width: min(100%, 720px); margin: 0 auto; }
+    .teaser-media img {
+      width: min(100%, 560px);
+      max-height: 610px;
+      margin: 0 auto;
       object-fit: contain;
-      border-radius: 18px;
     }
-
-    .visual-tag {
-      position: absolute;
-      right: -18px;
-      bottom: 38px;
-      padding: 10px 15px;
-      border-radius: 999px;
-      color: white;
-      background: var(--green-dark);
-      box-shadow: 0 10px 30px rgba(12, 73, 57, 0.24);
-      font-size: 0.78rem;
-      font-weight: 750;
-      letter-spacing: 0.03em;
+    .teaser-caption {
+      max-width: 820px;
+      margin: 19px auto 0;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 1.14rem;
+      line-height: 1.48;
+      text-align: center;
+      color: #4a4a4a;
     }
-
-    section { padding-block: clamp(76px, 9vw, 120px); }
-
-    .section-head {
-      max-width: 750px;
-      margin-bottom: 42px;
+    .section { padding: 42px 0; }
+    .section.alt { background: var(--light); }
+    .section-title {
+      margin: 0 0 22px;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      line-height: 1.2;
+      text-align: center;
+      color: #202124;
     }
-
-    .section-kicker {
-      margin-bottom: 9px;
-      color: var(--green);
-      font-size: 0.76rem;
-      font-weight: 850;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
+    .content p { margin: 0 0 1em; text-align: justify; }
+    .content p:last-child { margin-bottom: 0; }
+    .figure { margin: 25px auto 0; }
+    .figure img { width: 100%; margin: 0 auto; }
+    .figure.narrow img { width: min(100%, 760px); }
+    figcaption {
+      max-width: 820px;
+      margin: 13px auto 0;
+      color: #4a4a4a;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      text-align: center;
     }
-
-    h2 {
-      margin-bottom: 16px;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2rem, 4vw, 3.4rem);
-      line-height: 1.08;
-      letter-spacing: -0.035em;
-    }
-
-    .section-head p,
-    .copy { color: var(--muted); }
-
-    .abstract-card {
-      display: grid;
-      grid-template-columns: 0.8fr 2.2fr;
-      gap: clamp(28px, 6vw, 88px);
-      padding: clamp(28px, 5vw, 58px);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-    }
-
-    .abstract-card h2 { margin: 0; }
-    .abstract-card p:last-child { margin-bottom: 0; }
-
-    .method-strip {
+    .method-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: rgba(255,255,255,0.68);
+      gap: 22px;
+      margin: 34px auto 6px;
     }
-
-    .step {
-      position: relative;
-      min-height: 210px;
-      padding: 30px 25px;
-      border-right: 1px solid var(--line);
-    }
-
-    .step:last-child { border-right: 0; }
-
-    .step-no {
-      display: grid;
+    .method-item { text-align: center; }
+    .method-number {
       width: 38px;
       height: 38px;
-      margin-bottom: 26px;
+      display: grid;
       place-items: center;
+      margin: 0 auto 12px;
+      border: 2px solid #4a4a4a;
       border-radius: 50%;
-      color: var(--green-dark);
-      background: var(--green-soft);
-      font-family: Georgia, serif;
+      font-family: "Google Sans", sans-serif;
       font-weight: 700;
     }
-
-    .step h3 {
-      margin-bottom: 10px;
-      font-size: 1rem;
-      line-height: 1.25;
+    .method-item h3 {
+      margin: 0 0 7px;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 1.02rem;
+      font-weight: 600;
     }
-
-    .step p {
-      margin-bottom: 0;
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
-
-    .figure-card {
-      margin: 36px 0 0;
-      padding: clamp(14px, 2.5vw, 26px);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: white;
-      box-shadow: var(--shadow);
-    }
-
-    .figure-card img {
-      width: 100%;
-      border-radius: 12px;
-    }
-
-    figcaption {
-      margin-top: 17px;
-      color: var(--muted);
-      font-size: 0.86rem;
-      text-align: center;
-    }
-
-    .results-grid {
+    .method-item p { margin: 0; color: var(--muted); font-size: 0.89rem; line-height: 1.45; }
+    .result-summary {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 34px;
+      grid-template-columns: repeat(3, 1fr);
+      width: min(100%, 760px);
+      margin: 26px auto 30px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
-
-    .metric {
-      padding: 25px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.72);
-    }
-
-    .metric strong {
+    .result-item { padding: 20px 12px; text-align: center; border-right: 1px solid var(--border); }
+    .result-item:last-child { border-right: 0; }
+    .result-item strong {
       display: block;
-      margin-bottom: 7px;
-      color: var(--green-dark);
-      font-family: Georgia, serif;
-      font-size: clamp(2rem, 4vw, 3rem);
-      line-height: 1;
+      margin-bottom: 4px;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      line-height: 1.2;
+      color: #202124;
     }
-
-    .metric span {
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 680;
+    .result-item span { color: var(--muted); font-size: 0.86rem; }
+    .footer { padding: 38px 0; background: #fafafa; color: var(--muted); font-size: 0.82rem; text-align: center; }
+    @media (max-width: 720px) {
+      .hero { padding-top: 38px; }
+      .publication-title { font-size: 2.15rem; }
+      .teaser-caption { font-size: 1rem; }
+      .method-grid { grid-template-columns: 1fr 1fr; }
     }
-
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 28px;
-      align-items: start;
-    }
-
-    .insight {
-      height: 100%;
-      padding: 30px;
-      border-radius: var(--radius);
-      background: var(--green-dark);
-      color: white;
-    }
-
-    .insight .section-kicker { color: #acd8c8; }
-    .insight h3 { margin-bottom: 13px; font-size: 1.35rem; }
-    .insight p { margin-bottom: 0; color: rgba(255,255,255,0.76); }
-
-    .hardware {
-      background: #19221f;
-      color: white;
-    }
-
-    .hardware .section-kicker { color: #9ad1bc; }
-    .hardware .section-head p { color: rgba(255,255,255,0.68); }
-    .hardware .figure-card { background: #222c29; border-color: rgba(255,255,255,0.10); }
-    .hardware figcaption { color: rgba(255,255,255,0.62); }
-
-    .closing {
-      text-align: center;
-      padding-block: clamp(80px, 12vw, 150px);
-    }
-
-    .closing h2 { max-width: 850px; margin-inline: auto; }
-    .closing p { max-width: 680px; margin: 0 auto 28px; color: var(--muted); }
-
-    footer {
-      padding-block: 28px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 0.82rem;
-    }
-
-    .footer-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    @media (max-width: 900px) {
-      .hero { grid-template-columns: 1fr; min-height: auto; }
-      .hero-copy { max-width: 760px; }
-      .hero-visual { width: min(100%, 600px); margin-inline: auto; transform: none; }
-      .method-strip { grid-template-columns: 1fr 1fr; }
-      .step:nth-child(2) { border-right: 0; }
-      .step:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
-      .results-grid { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 640px) {
-      .wrap { width: min(calc(100% - 26px), var(--max-width)); }
-      .nav-links a:not(.paper-link) { display: none; }
-      .hero { padding-top: 62px; }
-      h1 { font-size: clamp(2.55rem, 15vw, 4rem); }
-      .abstract-card, .two-col { grid-template-columns: 1fr; }
-      .method-strip { grid-template-columns: 1fr; }
-      .step, .step:nth-child(2) { border-right: 0; border-bottom: 1px solid var(--line); }
-      .step:last-child { border-bottom: 0; }
-      .results-grid { grid-template-columns: 1fr 1fr; }
-      .metric { padding: 20px; }
-      .visual-tag { right: 4px; bottom: 26px; }
-      .footer-row { flex-direction: column; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { transition: none !important; }
+    @media (max-width: 480px) {
+      .container { width: min(calc(100% - 24px), var(--page-width)); }
+      .publication-title { font-size: 1.85rem; }
+      .authors { font-size: 1rem; }
+      .method-grid { grid-template-columns: 1fr; }
+      .result-summary { grid-template-columns: 1fr; }
+      .result-item { border-right: 0; border-bottom: 1px solid var(--border); }
+      .result-item:last-child { border-bottom: 0; }
     }
   </style>
 </head>
-
 <body>
-  <header class="nav-shell">
-    <nav class="wrap" aria-label="Primary navigation">
-      <a class="brand" href="#top" aria-label="DASF home">
-        <span class="brand-mark">D</span>
-        DASF
-      </a>
-      <div class="nav-links">
-        <a href="#method">Method</a>
-        <a href="#results">Results</a>
-        <a href="#hardware">Hardware</a>
-        <a class="paper-link" href="main.pdf">Paper ↗</a>
-      </div>
-    </nav>
-  </header>
-
-  <main id="top">
-    <section class="hero wrap">
-      <div class="hero-copy">
-        <div class="eyebrow">Safety-critical robot manipulation</div>
-        <h1>Denoising-Time <span class="accent">Safety Filtering</span> for Diffusion Policies</h1>
-        <p class="lead">
-          We integrate discrete-time control barrier function projections directly into diffusion-policy denoising, reshaping nominal action chunks into safe, task-directed robot motion without retraining the policy.
-        </p>
-        <div class="actions">
-          <a class="button primary" href="main.pdf">Read the paper <span aria-hidden="true">↗</span></a>
-          <a class="button" href="#hardware">View real-robot results <span aria-hidden="true">↓</span></a>
-        </div>
-      </div>
-
-      <figure class="hero-visual">
-        <img src="figures/intro_our_method_motion_final.png" alt="A UR3 manipulator carrying a blue block around an obstacle toward a goal region.">
-        <span class="visual-tag">Filtered during denoising</span>
-      </figure>
-    </section>
-
-    <section id="overview">
-      <div class="wrap">
-        <div class="abstract-card">
-          <div>
-            <div class="section-kicker">Overview</div>
-            <h2>Safe actions emerge inside the generative process.</h2>
-          </div>
-          <div class="copy">
-            <p>
-              Diffusion policies generate expressive action sequences, but their nominal trajectories need not satisfy collision-avoidance constraints. Execution-time filters can stop an unsafe command, yet path-preserving corrections may be unable to actively redirect a blocked trajectory. Constraining only a final state-space plan can also separate the safety correction from the policy's action-generation process.
-            </p>
-            <p>
-              DASF repeatedly projects intermediate action chunks onto trajectory-level discrete-time CBF constraints and feeds each correction back into subsequent denoising. The resulting chunk remains conditioned on the task observation while gaining room to bend around obstacles. A short prefix is executed before replanning from fresh measurements.
-            </p>
-          </div>
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1 class="publication-title">Denoising-Time Safety Filtering for Diffusion Policies via Discrete-Time Control Barrier Functions</h1>
+        <!-- Replace these with the final author list and affiliations. -->
+        <div class="authors"><span class="author-block">Anonymous Authors</span></div>
+        <div class="affiliations"><span class="author-block">ICRA 2027 Submission</span></div>
+        <div class="publication-links">
+          <a class="button" href="main.pdf" aria-label="Open paper PDF"><span class="button-icon" aria-hidden="true">▤</span><span>Paper</span></a>
+          <a class="button" href="#real-robot"><span class="button-icon" aria-hidden="true">▶</span><span>Real-Robot Demo</span></a>
         </div>
       </div>
     </section>
 
-    <section id="method">
-      <div class="wrap">
-        <div class="section-head">
-          <div class="section-kicker">Method</div>
-          <h2>Projection is part of denoising—not an afterthought.</h2>
-          <p>Every control update couples task-conditioned generation with sequential, trajectory-level safety correction.</p>
+    <section class="teaser">
+      <div class="container">
+        <div class="teaser-media">
+          <img src="figures/intro_our_method_motion_final.png" alt="A UR3 manipulator transports a blue block around an obstacle toward a goal region.">
         </div>
+        <p class="teaser-caption">Our method projects intermediate diffusion-policy action chunks onto discrete-time CBF constraints, reshaping nominal motion into an obstacle-aware trajectory while preserving task-directed behavior.</p>
+      </div>
+    </section>
 
-        <div class="method-strip" aria-label="Four stages of the method">
-          <article class="step">
-            <span class="step-no">1</span>
-            <h3>Observe</h3>
-            <p>Acquire the current robot observation and obstacle geometry.</p>
-          </article>
-          <article class="step">
-            <span class="step-no">2</span>
-            <h3>Denoise</h3>
-            <p>Generate a task-conditioned nominal action chunk with the frozen diffusion policy.</p>
-          </article>
-          <article class="step">
-            <span class="step-no">3</span>
-            <h3>Project</h3>
-            <p>Apply sequential discrete-time CBF constraints along the predicted EEF rollout.</p>
-          </article>
-          <article class="step">
-            <span class="step-no">4</span>
-            <h3>Execute &amp; replan</h3>
-            <p>Execute a short safe prefix, then repeat from the updated observation.</p>
-          </article>
+    <section class="section" id="abstract">
+      <div class="container text-container">
+        <h2 class="section-title">Abstract</h2>
+        <div class="content">
+          <p>Safe diffusion-based control requires enforcing collision-avoidance constraints without sacrificing task completion. Existing approaches either constrain diffusion-generated plans or apply safety filters during execution. Constraining a generated plan outside the policy can decouple safety correction from task-conditioned action generation, while execution-time filters that preserve the nominal path can halt unsafe motion but cannot actively redirect a blocked trajectory.</p>
+          <p>We introduce a discrete-time control barrier function safety filter that operates directly within the denoising process of a pretrained diffusion policy. Intermediate action chunks are sequentially projected onto trajectory-level safety constraints, and the corrected samples are returned to subsequent denoising steps. A short action prefix is executed before replanning from updated observations, enabling obstacle-aware modification without policy retraining.</p>
+          <p>Across 300 simulation trials per method on the Can, Square, and Lift tasks, our approach achieves the highest aggregate joint success-and-safety rate. Ablations support projection during denoising over final-output filtering and show that obstacle constraints improve safe task completion beyond action bounds alone. Experiments on a UR3 manipulator further demonstrate active obstacle avoidance while the obstacle remains in the workspace.</p>
         </div>
+      </div>
+    </section>
 
-        <figure class="figure-card">
-          <img src="figures/evaluation_simulation_tasks_schematic.png" alt="Can, Square, and Lift manipulation benchmarks used in simulation.">
-          <figcaption>Evaluation tasks from the robomimic benchmark: Can, Square, and Lift.</figcaption>
+    <section class="section alt" id="method">
+      <div class="container">
+        <div class="text-container">
+          <h2 class="section-title">Method</h2>
+          <div class="content">
+            <p>At every policy update, DASF samples a nominal action chunk from a frozen diffusion policy. During reverse diffusion, a sequential quadratic-program projection modifies the translational actions so that the predicted end-effector rollout satisfies discrete-time CBF conditions. Orientation and gripper commands remain unchanged. The projected sample is then passed back to the denoiser, coupling safety correction with the learned action prior.</p>
+          </div>
+        </div>
+        <div class="method-grid" aria-label="Method stages">
+          <div class="method-item"><div class="method-number">1</div><h3>Observe</h3><p>Acquire the robot observation and obstacle geometry.</p></div>
+          <div class="method-item"><div class="method-number">2</div><h3>Denoise</h3><p>Generate a task-conditioned nominal action chunk.</p></div>
+          <div class="method-item"><div class="method-number">3</div><h3>Project</h3><p>Enforce DCBF constraints along the predicted rollout.</p></div>
+          <div class="method-item"><div class="method-number">4</div><h3>Execute</h3><p>Run a short prefix and replan from new observations.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="simulation">
+      <div class="container">
+        <h2 class="section-title">Simulation Experiments</h2>
+        <div class="text-container content"><p>We evaluate all methods on the Can, Square, and Lift tasks from the robomimic benchmark. The same pretrained task policy is shared by the unfiltered policy and all safety-filter variants, isolating the effect of the safety mechanism.</p></div>
+        <figure class="figure narrow">
+          <img src="figures/evaluation_simulation_tasks_schematic.png" alt="Can, Square, and Lift simulation tasks.">
+          <figcaption>Simulation tasks used for quantitative evaluation.</figcaption>
+        </figure>
+        <div class="result-summary">
+          <div class="result-item"><strong>300</strong><span>trials per method</span></div>
+          <div class="result-item"><strong>3</strong><span>manipulation tasks</span></div>
+          <div class="result-item"><strong>42.7%</strong><span>aggregate safe &amp; success</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="ablation">
+      <div class="container">
+        <h2 class="section-title">Ablation Study</h2>
+        <div class="text-container content"><p>The Can and Square ablations compare projections applied during denoising with final-output filtering and action bounds alone. The results show that the improvement comes from incorporating obstacle-aware CBF constraints into the iterative denoising process rather than from clipping the generated actions.</p></div>
+        <figure class="figure narrow">
+          <img src="figures/denoise_projection_ablation_can_square.png" alt="Ablation results on Can and Square.">
+          <figcaption>Effect of denoising-time CBF projection on safe task completion.</figcaption>
         </figure>
       </div>
     </section>
 
-    <section id="results">
-      <div class="wrap">
-        <div class="section-head">
-          <div class="section-kicker">Simulation</div>
-          <h2>Safety improves without giving up task-directed behavior.</h2>
-          <p>We compare the same frozen diffusion policy under alternative safety mechanisms across three manipulation tasks.</p>
-        </div>
-
-        <div class="results-grid">
-          <div class="metric"><strong>300</strong><span>simulation trials per method</span></div>
-          <div class="metric"><strong>3</strong><span>manipulation tasks</span></div>
-          <div class="metric"><strong>42.7%</strong><span>aggregate safe-and-successful rate</span></div>
-          <div class="metric"><strong>0</strong><span>policy retraining steps required</span></div>
-        </div>
-
-        <div class="two-col">
-          <figure class="figure-card" style="margin-top:0">
-            <img src="figures/denoise_projection_ablation_can_square.png" alt="Ablation results comparing projection strategies on Can and Square.">
-            <figcaption>Ablations of denoising-time projection on Can and Square.</figcaption>
-          </figure>
-          <aside class="insight">
-            <div class="section-kicker">Key finding</div>
-            <h3>Safety correction remains coupled to generation.</h3>
-            <p>
-              Projecting intermediate samples lets later reverse-diffusion steps refine the corrected chunk. The ablation separates this effect from final-output filtering and from action bounds alone, supporting the role of obstacle-aware projection during denoising.
-            </p>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <section class="hardware" id="hardware">
-      <div class="wrap">
-        <div class="section-head">
-          <div class="section-kicker">Real robot</div>
-          <h2>Obstacle-aware manipulation on a UR3.</h2>
-          <p>
-            The frozen policy executes short action prefixes and replans from updated observations. Unlike path-preserving braking, denoising-time projection can redirect the nominal chunk while the obstacle remains in the workspace.
-          </p>
-        </div>
-        <figure class="figure-card">
-          <img src="figures/evaluation_real_robot_demo_photos.png" alt="Real-robot sequence comparing diffusion policy, path-consistent filtering, and the proposed method.">
-          <figcaption>Qualitative comparison in the real-robot obstacle-avoidance task.</figcaption>
+    <section class="section" id="real-robot">
+      <div class="container">
+        <h2 class="section-title">Real-Robot Demonstration</h2>
+        <div class="text-container content"><p>We deploy the frozen diffusion policy and safety filters on a UR3 manipulator. The qualitative sequences contrast unfiltered execution and path-preserving braking with our denoising-time projection. Our method modifies the nominal chunk to navigate around the obstacle and completes the transport task without requiring the obstacle to be removed.</p></div>
+        <figure class="figure">
+          <img src="figures/evaluation_real_robot_demo_photos.png" alt="Real-robot comparison of diffusion-policy safety methods on a UR3 manipulator.">
+          <figcaption>Qualitative real-robot comparison under an obstacle placed along the nominal path.</figcaption>
         </figure>
-      </div>
-    </section>
-
-    <section class="closing">
-      <div class="wrap">
-        <div class="section-kicker">DASF</div>
-        <h2>Safety constraints belong inside action generation.</h2>
-        <p>
-          A lightweight inference-time interface between pretrained diffusion policies and discrete-time control barrier functions for safer robotic manipulation.
-        </p>
-        <div class="actions" style="justify-content:center">
-          <a class="button primary" href="main.pdf">Paper <span aria-hidden="true">↗</span></a>
-          <a class="button" href="#top">Back to top <span aria-hidden="true">↑</span></a>
-        </div>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="wrap footer-row">
-      <span>DASF · Denoising-Time Safety Filtering</span>
-      <span>Project page · 2027</span>
-    </div>
+  <footer class="footer">
+    <div class="container">This one-page project website follows the clean academic layout popularized by the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies project-page template</a>.</div>
   </footer>
 </body>
 </html>
