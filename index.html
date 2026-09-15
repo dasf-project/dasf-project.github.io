@@ -100,6 +100,15 @@
       text-align: center;
       color: #4a4a4a;
     }
+    .video-frame {
+      width: min(100%, 800px);
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 4px;
+      background: #111;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+    }
+    .video-frame video { display: block; width: 100%; height: auto; }
     .section { padding: 42px 0; }
     .section.alt { background: var(--light); }
     .section-title {
@@ -124,6 +133,70 @@
       line-height: 1.45;
       text-align: center;
     }
+    .carousel {
+      position: relative;
+      width: 100%;
+      margin: 28px auto 0;
+      padding: 0 54px;
+      outline: none;
+    }
+    .carousel-viewport { overflow: hidden; }
+    .carousel-track {
+      display: flex;
+      transition: transform 0.35s ease;
+      will-change: transform;
+    }
+    .carousel-slide {
+      flex: 0 0 100%;
+      min-width: 0;
+      margin: 0;
+      padding: 0 4px;
+    }
+    .carousel-slide img {
+      width: 100%;
+      height: 310px;
+      object-fit: contain;
+      margin: 0 auto;
+      background: #fff;
+    }
+    .carousel-button {
+      position: absolute;
+      top: 137px;
+      z-index: 2;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid #d0d0d0;
+      border-radius: 50%;
+      color: #3a3a3a;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+      font-family: Arial, sans-serif;
+      font-size: 1.45rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .carousel-button:hover { background: #f1f1f1; }
+    .carousel-button.prev { left: 3px; }
+    .carousel-button.next { right: 3px; }
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .carousel-dot {
+      width: 9px;
+      height: 9px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: #c8c8c8;
+      cursor: pointer;
+    }
+    .carousel-dot.active { background: #4a4a4a; }
     .method-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -175,12 +248,18 @@
       .publication-title { font-size: 2.15rem; }
       .teaser-caption { font-size: 1rem; }
       .method-grid { grid-template-columns: 1fr 1fr; }
+      .carousel { padding: 0 42px; }
+      .carousel-slide img { height: 250px; }
+      .carousel-button { top: 107px; }
     }
     @media (max-width: 480px) {
       .container { width: min(calc(100% - 24px), var(--page-width)); }
       .publication-title { font-size: 1.85rem; }
       .authors { font-size: 1rem; }
       .method-grid { grid-template-columns: 1fr; }
+      .carousel { padding: 0 34px; }
+      .carousel-slide img { height: 190px; }
+      .carousel-button { top: 77px; width: 34px; height: 34px; }
       .result-summary { grid-template-columns: 1fr; }
       .result-item { border-right: 0; border-bottom: 1px solid var(--border); }
       .result-item:last-child { border-bottom: 0; }
@@ -197,7 +276,7 @@
         <div class="affiliations"><span class="author-block">ICRA 2027 Submission</span></div>
         <div class="publication-links">
           <a class="button" href="main.pdf" aria-label="Open paper PDF"><span class="button-icon" aria-hidden="true">▤</span><span>Paper</span></a>
-          <a class="button" href="#real-robot"><span class="button-icon" aria-hidden="true">▶</span><span>Real-Robot Demo</span></a>
+          <a class="button" href="#video"><span class="button-icon" aria-hidden="true">▶</span><span>Video</span></a>
         </div>
       </div>
     </section>
@@ -211,11 +290,23 @@
       </div>
     </section>
 
+    <section class="section" id="video">
+      <div class="container">
+        <h2 class="section-title">Video</h2>
+        <div class="video-frame">
+          <video controls preload="metadata" poster="figures/intro_our_method_motion_final.png">
+            <source src="videos/real_robot_demo.mp4" type="video/mp4">
+            Your browser does not support embedded MP4 video.
+          </video>
+        </div>
+      </div>
+    </section>
+
     <section class="section" id="abstract">
       <div class="container text-container">
         <h2 class="section-title">Abstract</h2>
         <div class="content">
-          Ensuring collision avoidance while maintaining task progress remains a challenge for diffusion-based manipulation control. Constrained state-space plans remain sensitive to inverse-dynamics and tracking errors during execution, while path-preserving safety filters can stop unsafe motion but cannot redirect a blocked trajectory. To address these limitations, we propose a control barrier function (CBF) safety filter that enforces constraints directly within the action-denoising process of a pretrained diffusion policy. Our method combines trajectory-level projection under discrete-time CBF constraints with task-conditioned denoising to reshape nominal action chunks around obstacles without retraining the policy. At selected denoising steps, intermediate chunks are projected to satisfy CBF constraints and fed back into subsequent denoising steps. The controller executes a short action prefix and replans from updated observations. We evaluate our method on the Can, Square, and Lift tasks from robomimic and on a real UR3 manipulator. Across 300 simulation trials per method, our filter achieves an aggregate joint success-and-safety rate of 42.7\%, exceeding the best constrained state-space diffusion baseline by 25.4 percentage points and path-preserving safety filtering by 32.4 percentage points. On Can and Square, denoising-time projection improves joint success and safety by up to 22.5 percentage points over final-output filtering, while adding obstacle-aware CBF constraints yields gains of up to 50.0 percentage points over action bounds alone. UR3 demonstrations further show obstacle-aware passage while the obstacle remains in the workspace. 
+          <p>Ensuring collision avoidance while maintaining task progress remains a challenge for diffusion-based manipulation control. Constrained state-space plans remain sensitive to inverse-dynamics and tracking errors during execution, while path-preserving safety filters can stop unsafe motion but cannot redirect a blocked trajectory. To address these limitations, we propose a control barrier function (CBF) safety filter that enforces constraints directly within the action-denoising process of a pretrained diffusion policy. Our method combines trajectory-level projection under discrete-time CBF constraints with task-conditioned denoising to reshape nominal action chunks around obstacles without retraining the policy. At selected denoising steps, intermediate chunks are projected to satisfy CBF constraints and fed back into subsequent denoising steps. The controller executes a short action prefix and replans from updated observations. We evaluate our method on the Can, Square, and Lift tasks from robomimic and on a real UR3 manipulator. Across 300 simulation trials per method, our filter achieves an aggregate joint success-and-safety rate of 42.7%, exceeding the best constrained state-space diffusion baseline by 25.4 percentage points and path-preserving safety filtering by 32.4 percentage points. On Can and Square, denoising-time projection improves joint success and safety by up to 22.5 percentage points over final-output filtering, while adding obstacle-aware CBF constraints yields gains of up to 50.0 percentage points over action bounds alone. UR3 demonstrations further show obstacle-aware passage while the obstacle remains in the workspace.</p>
         </div>
       </div>
     </section>
@@ -226,6 +317,26 @@
           <h2 class="section-title">Method</h2>
           <div class="content">
             <p>At every policy update, DASF samples a nominal action chunk from a frozen diffusion policy. During reverse diffusion, a sequential quadratic-program projection modifies the translational actions so that the predicted end-effector rollout satisfies discrete-time CBF conditions. Orientation and gripper commands remain unchanged. The projected sample is then passed back to the denoiser, coupling safety correction with the learned action prior.</p>
+          </div>
+        </div>
+        <div class="carousel" id="method-carousel" tabindex="0" aria-label="Method figures">
+          <button class="carousel-button prev" type="button" aria-label="Previous figure">&#8249;</button>
+          <div class="carousel-viewport">
+            <div class="carousel-track">
+              <figure class="carousel-slide">
+                <img src="figures/method_pipeline.png" alt="Pipeline of denoising-time CBF safety filtering for a diffusion policy.">
+                <figcaption>Overview of the proposed denoising-time safety-filtering pipeline.</figcaption>
+              </figure>
+              <figure class="carousel-slide">
+                <img src="figures/can_seed40_denoising_cbf.png" alt="Evolution of an action chunk and its CBF constraint values across denoising updates on Can seed 40.">
+                <figcaption>Denoising-time CBF correction on Can seed 40.</figcaption>
+              </figure>
+            </div>
+          </div>
+          <button class="carousel-button next" type="button" aria-label="Next figure">&#8250;</button>
+          <div class="carousel-dots" aria-label="Select method figure">
+            <button class="carousel-dot active" type="button" aria-label="Show pipeline" aria-current="true"></button>
+            <button class="carousel-dot" type="button" aria-label="Show denoising analysis"></button>
           </div>
         </div>
         <div class="method-grid" aria-label="Method stages">
@@ -279,5 +390,31 @@
   <footer class="footer">
     <div class="container">This one-page project website follows the clean academic layout popularized by the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies project-page template</a>.</div>
   </footer>
+  <script>
+    (() => {
+      const carousel = document.getElementById('method-carousel');
+      const track = carousel.querySelector('.carousel-track');
+      const dots = [...carousel.querySelectorAll('.carousel-dot')];
+      let index = 0;
+
+      const show = (nextIndex) => {
+        index = (nextIndex + dots.length) % dots.length;
+        track.style.transform = `translateX(-${index * 100}%)`;
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('active', i === index);
+          if (i === index) dot.setAttribute('aria-current', 'true');
+          else dot.removeAttribute('aria-current');
+        });
+      };
+
+      carousel.querySelector('.prev').addEventListener('click', () => show(index - 1));
+      carousel.querySelector('.next').addEventListener('click', () => show(index + 1));
+      dots.forEach((dot, i) => dot.addEventListener('click', () => show(i)));
+      carousel.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') show(index - 1);
+        if (event.key === 'ArrowRight') show(index + 1);
+      });
+    })();
+  </script>
 </body>
 </html>
